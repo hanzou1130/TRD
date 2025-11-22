@@ -16,7 +16,7 @@ from datetime import datetime
 
 # 設定
 PDF_PATH = r"c:/Users/baoma/TRD/Renesas/REN_r01uh0684jj0130-rh850f1kh-rh850f1km_MAH_20210930.pdf"
-DB_PATH = r"c:/Users/baoma/TRD/rh850_mah_manual.db"
+DB_PATH = r"c:/Users/baoma/TRD/RH850F1KM_HardwareManual.db"
 BATCH_SIZE = 100  # 100ページごとにコミット
 
 class LargePDFDatabaseBuilder:

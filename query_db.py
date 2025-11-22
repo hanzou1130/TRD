@@ -11,7 +11,7 @@ import time
 import sys
 from typing import List, Tuple, Dict, Any
 
-DB_PATH = r"c:/Users/baoma/TRD/RH850F1KM_HardwareManual.db"
+DB_PATH = r"c:/Users/baoma/TRD/RH850F1KMS1_Board.db"
 
 class ManualDatabase:
     """マニュアルデータベース検索クラス"""

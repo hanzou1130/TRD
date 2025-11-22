@@ -14,7 +14,7 @@ import time
 
 # 設定
 PDF_PATH = r"c:/Users/baoma/TRD/Renesas/r12ut0004ed0110-rh850f1km-s1.pdf"
-DB_PATH = r"c:/Users/baoma/TRD/rh850_manual.db"
+DB_PATH = r"c:/Users/baoma/TRD/RH850F1KMS1_Board.db"
 
 class PDFDatabaseBuilder:
     """PDFからデータベースを構築するクラス"""
