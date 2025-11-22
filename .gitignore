@@ -1,0 +1,28 @@
+# データベースファイル（生成物）
+*.db
+
+# PDFファイル（大容量ソース）
+*.pdf
+
+# Pythonキャッシュ
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 仮想環境
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
