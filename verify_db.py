@@ -6,7 +6,7 @@
 
 import sqlite3
 
-DB_PATH = r"c:/Users/baoma/TRD/rh850_manual.db"
+DB_PATH = r"c:/Users/baoma/TRD/RH850F1KM_HardwareManual.db"
 
 def verify_database():
     """データベースの整合性を検証"""
