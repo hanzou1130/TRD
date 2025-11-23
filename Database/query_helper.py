@@ -11,7 +11,8 @@ from typing import List, Dict, Any, Tuple, Optional
 from pathlib import Path
 import json
 
-DB_PATH = r"c:/Users/baoma/TRD/RH850_FlashMemory_IF_Fast.db"
+# デフォルトDBパスを修正（Databaseフォルダ内）
+DB_PATH = r"c:/Users/baoma/TRD/Database/RH850_FlashMemory_IF_Fast.db"
 
 class QueryHelper:
     """データベースクエリヘルパークラス"""
