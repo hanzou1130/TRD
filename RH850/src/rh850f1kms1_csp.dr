@@ -1,0 +1,129 @@
+/***********************************************************************************************************************
+* DISCLAIMER
+* This software is supplied by Renesas Electronics Corporation and is only intended for use with Renesas products.
+* No other uses are authorized. This software is owned by Renesas Electronics Corporation and is protected under all
+* applicable laws, including copyright laws.
+***********************************************************************************************************************/
+
+/***********************************************************************************************************************
+* File Name    : rh850f1kms1_csp.dr
+* Device(s)    : RH850/F1KM-S1
+* Tool-Chain   : CS+ for CC (CC-RH Compiler)
+* Description  : Device file for RH850F1KMS-1 microcontroller
+*              : Memory layout and section placement
+* Creation Date: 2025-11-22
+***********************************************************************************************************************/
+
+MEMORY
+{
+    /* Code Flash - 4MB */
+    ROM (RX)  : ORIGIN = 0x00000000, LENGTH = 0x00400000
+
+    /* Local RAM (CPU1) - 256KB */
+    RAM (RWX) : ORIGIN = 0xFEBD0000, LENGTH = 0x00040000
+}
+
+SECTIONS
+{
+    /* Interrupt Vector Table */
+    .intvect :
+    {
+        KEEP(*(.intvect))
+        . = ALIGN(512);
+    } > ROM
+
+    /* Program Code */
+    .text :
+    {
+        *(.text)
+        *(.text.*)
+        . = ALIGN(4);
+    } > ROM
+
+    /* Read-only Data */
+    .const :
+    {
+        *(.rodata)
+        *(.rodata.*)
+        . = ALIGN(4);
+    } > ROM
+
+    /* C++ Constructor/Destructor Tables */
+    .ctors :
+    {
+        ___ctors = .;
+        KEEP(*(.ctors))
+        KEEP(*(.init_array))
+        ___ctors_end = .;
+        . = ALIGN(4);
+    } > ROM
+
+    .dtors :
+    {
+        ___dtors = .;
+        KEEP(*(.dtors))
+        KEEP(*(.fini_array))
+        ___dtors_end = .;
+        . = ALIGN(4);
+    } > ROM
+
+    /* Initialized Data */
+    .data : AT(LOADADDR(.dtors) + SIZEOF(.dtors))
+    {
+        __data_start = .;
+        *(.data)
+        *(.data.*)
+        . = ALIGN(4);
+        __data_end = .;
+    } > RAM
+
+    __data_load = LOADADDR(.data);
+
+    /* Small Data Area (SDA) */
+    .sdata : AT(LOADADDR(.data) + SIZEOF(.data))
+    {
+        __sdata_start = .;
+        *(.sdata)
+        *(.sdata.*)
+        . = ALIGN(4);
+        __sdata_end = .;
+    } > RAM
+
+    __sdata_load = LOADADDR(.sdata);
+
+    /* Uninitialized Data (BSS) */
+    .bss (NOLOAD) :
+    {
+        __bss_start = .;
+        *(.bss)
+        *(.bss.*)
+        *(COMMON)
+        . = ALIGN(4);
+        __bss_end = .;
+    } > RAM
+
+    /* Small BSS */
+    .sbss (NOLOAD) :
+    {
+        __sbss_start = .;
+        *(.sbss)
+        *(.sbss.*)
+        . = ALIGN(4);
+        __sbss_end = .;
+    } > RAM
+
+    /* Stack */
+    .stack (NOLOAD) :
+    {
+        . = ALIGN(8);
+        __stkbase = .;
+        . = . + 0x1000;         /* 4KB stack */
+        __stkend = .;
+    } > RAM
+}
+
+/* Provide symbols for startup code */
+__romstart = ORIGIN(ROM);
+__romend = ORIGIN(ROM) + LENGTH(ROM);
+__ramstart = ORIGIN(RAM);
+__ramend = ORIGIN(RAM) + LENGTH(RAM);
