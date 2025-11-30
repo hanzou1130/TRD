@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>TAUJ0ドライバ 詳細設計書</title>
+	<style>
+		:root {
+			--primary-color: #2563eb;
+			--secondary-color: #1e40af;
+			--bg-color: #f8fafc;
+			--text-color: #334155;
+			--heading-color: #1e293b;
+			--code-bg: #f1f5f9;
+			--border-color: #e2e8f0;
+		}
+
+		body {
+			font-family: 'Segoe UI', 'Meiryo', system-ui, sans-serif;
+			line-height: 1.6;
+			color: var(--text-color);
+			background: var(--bg-color);
+			margin: 0;
+			padding: 2rem;
+		}
+
+		.container {
+			max-width: 1000px;
+			margin: 0 auto;
+			background: white;
+			padding: 3rem;
+			border-radius: 12px;
+			box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+		}
+
+		h1 {
+			color: var(--primary-color);
+			border-bottom: 2px solid var(--border-color);
+			padding-bottom: 1rem;
+			margin-bottom: 2rem;
+		}
+
+		h2 {
+			color: var(--secondary-color);
+			margin-top: 2.5rem;
+			border-left: 4px solid var(--primary-color);
+			padding-left: 1rem;
+		}
+
+		h3 {
+			color: var(--heading-color);
+			margin-top: 2rem;
+		}
+
+		h4 {
+			color: var(--heading-color);
+			margin-top: 1.5rem;
+			font-weight: 600;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin: 1.5rem 0;
+		}
+
+		th,
+		td {
+			border: 1px solid var(--border-color);
+			padding: 0.75rem;
+			text-align: left;
+		}
+
+		th {
+			background-color: var(--code-bg);
+			font-weight: 600;
+		}
+
+		code {
+			background-color: var(--code-bg);
+			padding: 0.2rem 0.4rem;
+			border-radius: 4px;
+			font-family: 'Consolas', monospace;
+			font-size: 0.9em;
+			color: #d946ef;
+		}
+
+		pre {
+			background-color: #1e293b;
+			color: #e2e8f0;
+			padding: 1.5rem;
+			border-radius: 8px;
+			overflow-x: auto;
+		}
+
+		pre code {
+			background-color: transparent;
+			color: inherit;
+			padding: 0;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<h1>TAUJ0ドライバ 詳細設計書</h1>
+
+		<h2>1. 概要</h2>
+		<p>本ドキュメントは、TAUJ0ドライバの各関数の内部処理ロジック、変数定義、およびアルゴリズムの詳細を記述する。実装者が本ドキュメントに基づいてコーディング可能なレベルの詳細度とする。</p>
+
+		<h2>2. 定数・マクロ定義</h2>
+
+		<h3>2.1 システム定数</h3>
+		<table>
+			<tr>
+				<th>マクロ名</th>
+				<th>値</th>
+				<th>説明</th>
+			</tr>
+			<tr>
+				<td><code>SYSTEM_CLOCK_HZ</code></td>
+				<td><code>80000000UL</code></td>
+				<td>システムクロック周波数 (80MHz)</td>
+			</tr>
+			<tr>
+				<td><code>TAUJ0_PRESCALER</code></td>
+				<td><code>1UL</code></td>
+				<td>TAUJ0クロックプリスケーラ (PCLK/1)</td>
+			</tr>
+		</table>
+
+		<h3>2.2 レジスタアドレス</h3>
+		<p><code>tauj0_regs.h</code> で定義される構造体ポインタ <code>TAUJ0</code> を使用してアクセスする。<br>
+			ベースアドレス: <code>0xFFE50000</code></p>
+
+		<h2>3. 関数詳細設計</h2>
+
+		<h3>3.1 TAUJ0_Init</h3>
+
+		<h4>3.1.1 処理概要</h4>
+		<p>TAUJ0チャネル0をインターバルタイマモードで初期化する。</p>
+
+		<h4>3.1.2 引数・戻り値</h4>
+		<ul>
+			<li><strong>引数</strong>: <code>uint32_t interval_us</code> (インターバル周期 [us])</li>
+			<li><strong>戻り値</strong>: なし</li>
+		</ul>
+
+		<h4>3.1.3 内部変数</h4>
+		<p>なし</p>
+
+		<h4>3.1.4 処理フロー</h4>
+		<img src="flowcharts/tauj0_init.svg" alt="TAUJ0_Init フローチャート" style="max-width: 100%; height: auto;" />
+
+		<h4>3.1.5 実装詳細</h4>
+		<ol>
+			<li><strong>タイマ停止</strong>: <code>TAUJ0.TT0</code> レジスタのビット0に1を書き込み、カウント動作を確実に停止させる。</li>
+			<li><strong>モード設定</strong>: <code>TAUJ0.CMOR0</code> レジスタに <code>0x0000</code> を書き込む。
+				<ul>
+					<li><code>CKS[1:0] = 00</code>: 動作クロックとしてCK0を選択。</li>
+					<li><code>MD0 = 0</code>: インターバルタイマモードを選択。</li>
+				</ul>
+			</li>
+			<li><strong>インターバル設定</strong>: <code>TAUJ0_SetInterval</code> 関数を呼び出し、<code>interval_us</code>
+				に基づくカウント値を設定する。</li>
+		</ol>
+
+		<hr>
+
+		<h3>3.2 TAUJ0_Start</h3>
+
+		<h4>3.2.1 処理概要</h4>
+		<p>TAUJ0チャネル0のカウント動作を開始する。</p>
+
+		<h4>3.2.2 引数・戻り値</h4>
+		<ul>
+			<li><strong>引数</strong>: なし</li>
+			<li><strong>戻り値</strong>: なし</li>
+		</ul>
+
+		<h4>3.2.3 処理フロー</h4>
+		<img src="flowcharts/tauj0_start.svg" alt="TAUJ0_Start フローチャート" style="max-width: 100%; height: auto;" />
+
+		<h4>3.2.4 実装詳細</h4>
+		<ol>
+			<li><strong>スタートトリガ</strong>: <code>TAUJ0.TS0</code> レジスタのビット0に1を書き込む。これにより <code>TE0</code> (Timer Enable)
+				ビットがセットされ、カウントダウンが開始される。</li>
+		</ol>
+
+		<hr>
+
+		<h3>3.3 TAUJ0_Stop</h3>
+
+		<h4>3.3.1 処理概要</h4>
+		<p>TAUJ0チャネル0のカウント動作を停止する。</p>
+
+		<h4>3.3.2 引数・戻り値</h4>
+		<ul>
+			<li><strong>引数</strong>: なし</li>
+			<li><strong>戻り値</strong>: なし</li>
+		</ul>
+
+		<h4>3.3.3 処理フロー</h4>
+		<img src="flowcharts/tauj0_stop.svg" alt="TAUJ0_Stop フローチャート" style="max-width: 100%; height: auto;" />
+
+		<h4>3.3.4 実装詳細</h4>
+		<ol>
+			<li><strong>ストップトリガ</strong>: <code>TAUJ0.TT0</code> レジスタのビット0に1を書き込む。これにより <code>TE0</code>
+				ビットがクリアされ、カウントが停止する。</li>
+		</ol>
+
+		<hr>
+
+		<h3>3.4 TAUJ0_SetInterval</h3>
+
+		<h4>3.4.1 処理概要</h4>
+		<p>指定されたマイクロ秒単位の時間からタイマカウント値を計算し、レジスタに設定する。</p>
+
+		<h4>3.4.2 引数・戻り値</h4>
+		<ul>
+			<li><strong>引数</strong>: <code>uint32_t interval_us</code> (インターバル周期 [us])</li>
+			<li><strong>戻り値</strong>: なし</li>
+		</ul>
+
+		<h4>3.4.3 内部変数</h4>
+		<ul>
+			<li><code>uint32_t counts</code>: 計算されたレジスタ設定値</li>
+		</ul>
+
+		<h4>3.4.4 処理フロー</h4>
+		<img src="flowcharts/tauj0_setinterval.svg" alt="TAUJ0_SetInterval フローチャート"
+			style="max-width: 100%; height: auto;" />
+
+		<h4>3.4.5 実装詳細</h4>
+		<ol>
+			<li><strong>カウント値計算</strong>:
+				<ul>
+					<li>オーバーフローを防ぐため、および64ビット除算を回避するため、以下の簡略化された計算式を使用する。</li>
+					<li><code>counts = interval_us * (SYSTEM_CLOCK_HZ / 1000000UL)</code></li>
+					<li><code>SYSTEM_CLOCK_HZ</code> が80MHzの場合、1usあたり80カウントとなる。</li>
+				</ul>
+			</li>
+			<li><strong>レジスタ設定</strong>: 計算結果を <code>TAUJ0.CDR0</code> レジスタに書き込む。
+				<ul>
+					<li>注意: タイマ動作中に書き込んだ場合、次回のアンダーフロー後に新しい値がリロードされる。</li>
+				</ul>
+			</li>
+		</ol>
+
+		<h2>4. エラーハンドリング</h2>
+		<p>本ドライバは軽量化のため、引数チェック（NULLポインタチェックや範囲チェック）を行わない。アプリケーション側で適切な値を保証すること。<br>
+			特に <code>interval_us</code> が大きすぎて32ビットカウンタ値を超過する場合 (<code>interval_us > 53,687,091</code>)
+			の動作は保証しない（オーバーフローして誤った周期になる）。</p>
+	</div>
+</body>
+
+</html>

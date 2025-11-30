@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 350">
+    <defs>
+        <style>
+            .box { fill: white; stroke: #334155; stroke-width: 2; }
+            .text { font-family: 'Meiryo', sans-serif; font-size: 14px; fill: #1e293b; }
+            .arrow { fill: none; stroke: #334155; stroke-width: 2; marker-end: url(#arrowhead); }
+            .terminal { rx: 20; }
+        </style>
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#334155" />
+        </marker>
+    </defs>
+
+    <!-- Start Terminal -->
+    <rect class="box terminal" x="150" y="20" width="100" height="40" />
+    <text class="text" x="200" y="45" text-anchor="middle">開始</text>
+
+    <!-- Arrow -->
+    <path class="arrow" d="M 200 60 L 200 90" />
+
+    <!-- Step 1 -->
+    <rect class="box" x="75" y="90" width="250" height="40" />
+    <text class="text" x="200" y="115" text-anchor="middle">1. カウント値計算</text>
+
+    <!-- Arrow -->
+    <path class="arrow" d="M 200 130 L 200 160" />
+
+    <!-- Note -->
+    <rect class="box" x="30" y="160" width="340" height="50" fill="#f1f5f9" />
+    <text class="text" x="200" y="185" text-anchor="middle" font-size="12">計算式: interval_us *</text>
+    <text class="text" x="200" y="202" text-anchor="middle" font-size="12">(80MHz / 1MHz)</text>
+
+    <!-- Arrow -->
+    <path class="arrow" d="M 200 210 L 200 240" />
+
+    <!-- Step 2 -->
+    <rect class="box" x="50" y="240" width="300" height="50" />
+    <text class="text" x="200" y="265" text-anchor="middle">2. レジスタ設定</text>
+    <text class="text" x="200" y="282" text-anchor="middle" font-size="12">(CDR0 = counts)</text>
+
+    <!-- Arrow -->
+    <path class="arrow" d="M 200 290 L 200 320" />
+
+    <!-- End Terminal -->
+    <rect class="box terminal" x="150" y="320" width="100" height="40" />
+    <text class="text" x="200" y="345" text-anchor="middle">終了</text>
+</svg>

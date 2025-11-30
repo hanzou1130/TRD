@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>TAUJ0ドライバ 基本設計書</title>
+	<style>
+		:root {
+			--primary-color: #2563eb;
+			--secondary-color: #1e40af;
+			--bg-color: #f8fafc;
+			--text-color: #334155;
+			--heading-color: #1e293b;
+			--code-bg: #f1f5f9;
+			--border-color: #e2e8f0;
+		}
+
+		body {
+			font-family: 'Segoe UI', 'Meiryo', system-ui, sans-serif;
+			line-height: 1.6;
+			color: var(--text-color);
+			background: var(--bg-color);
+			margin: 0;
+			padding: 2rem;
+		}
+
+		.container {
+			max-width: 1000px;
+			margin: 0 auto;
+			background: white;
+			padding: 3rem;
+			border-radius: 12px;
+			box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+		}
+
+		h1 {
+			color: var(--primary-color);
+			border-bottom: 2px solid var(--border-color);
+			padding-bottom: 1rem;
+			margin-bottom: 2rem;
+		}
+
+		h2 {
+			color: var(--secondary-color);
+			margin-top: 2.5rem;
+			border-left: 4px solid var(--primary-color);
+			padding-left: 1rem;
+		}
+
+		h3 {
+			color: var(--heading-color);
+			margin-top: 2rem;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin: 1.5rem 0;
+		}
+
+		th,
+		td {
+			border: 1px solid var(--border-color);
+			padding: 0.75rem;
+			text-align: left;
+		}
+
+		th {
+			background-color: var(--code-bg);
+			font-weight: 600;
+		}
+
+		code {
+			background-color: var(--code-bg);
+			padding: 0.2rem 0.4rem;
+			border-radius: 4px;
+			font-family: 'Consolas', monospace;
+			font-size: 0.9em;
+			color: #d946ef;
+		}
+
+		pre {
+			background-color: #1e293b;
+			color: #e2e8f0;
+			padding: 1.5rem;
+			border-radius: 8px;
+			overflow-x: auto;
+		}
+
+		pre code {
+			background-color: transparent;
+			color: inherit;
+			padding: 0;
+		}
+
+		.mermaid {
+			background: white;
+			padding: 1rem;
+			border: 1px solid var(--border-color);
+			border-radius: 8px;
+			margin: 1.5rem 0;
+			text-align: center;
+		}
+	</style>
+	<script type="module">
+		import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+		mermaid.initialize({ startOnLoad: true });
+	</script>
+</head>
+
+<body>
+	<div class="container">
+		<h1>TAUJ0ドライバ 基本設計書</h1>
+
+		<h2>1. システム構成</h2>
+
+		<h3>1.1 概要</h3>
+		<p>本ドライバは、RH850F1KMS-1マイクロコントローラのTAUJ0 (Timer Array Unit J) を制御し、アプリケーションに対して周期的なインターバルタイマ機能を提供する。</p>
+
+		<h3>1.2 ハードウェア構成</h3>
+		<ul>
+			<li><strong>対象デバイス</strong>: Renesas RH850F1KMS-1</li>
+			<li><strong>使用リソース</strong>:
+				<ul>
+					<li>TAUJ0 ユニット0</li>
+					<li>チャネル0 (TAUJ00)</li>
+					<li>クロックソース: PCLK (80MHz)</li>
+					<li>割り込み: INTTAUJ0I0</li>
+				</ul>
+			</li>
+		</ul>
+
+		<h3>1.3 ソフトウェア構成</h3>
+		<ul>
+			<li><strong>開発言語</strong>: C言語 (C99準拠)</li>
+			<li><strong>コンパイラ</strong>: Renesas CC-RH</li>
+			<li><strong>コーディング規約</strong>: MISRA C:2012</li>
+		</ul>
+
+		<h2>2. 機能仕様</h2>
+
+		<h3>2.1 機能一覧</h3>
+		<table>
+			<tr>
+				<th>機能ID</th>
+				<th>機能名称</th>
+				<th>説明</th>
+			</tr>
+			<tr>
+				<td>F01</td>
+				<td>初期化機能</td>
+				<td>TAUJ0チャネルをインターバルタイマモードで初期化する。</td>
+			</tr>
+			<tr>
+				<td>F02</td>
+				<td>開始機能</td>
+				<td>タイマカウントを開始する。</td>
+			</tr>
+			<tr>
+				<td>F03</td>
+				<td>停止機能</td>
+				<td>タイマカウントを停止する。</td>
+			</tr>
+			<tr>
+				<td>F04</td>
+				<td>周期設定機能</td>
+				<td>タイマのインターバル周期をマイクロ秒単位で設定する。</td>
+			</tr>
+			<tr>
+				<td>F05</td>
+				<td>割り込み通知</td>
+				<td>カウント満了時に割り込みを発生させる。</td>
+			</tr>
+		</table>
+
+		<h3>2.2 状態遷移</h3>
+		<p>ドライバは以下の状態を持つ。</p>
+
+		<div class="mermaid">
+			stateDiagram-v2
+			[*] --> Uninitialized
+			Uninitialized --> Stopped : TAUJ0_Init()
+			Stopped --> Running : TAUJ0_Start()
+			Running --> Stopped : TAUJ0_Stop()
+			Stopped --> Stopped : TAUJ0_SetInterval()
+		</div>
+
+		<ul>
+			<li><strong>Uninitialized</strong>: 初期化前の状態。ハードウェアはリセット状態または不定。</li>
+			<li><strong>Stopped</strong>: 初期化済み、カウント停止状態。設定変更が可能。</li>
+			<li><strong>Running</strong>: カウント動作中。割り込みが発生する。</li>
+		</ul>
+
+		<h2>3. インターフェース仕様</h2>
+
+		<h3>3.1 API仕様</h3>
+
+		<h4>3.1.1 TAUJ0_Init</h4>
+		<ul>
+			<li><strong>概要</strong>: TAUJ0チャネルの初期化を行う。</li>
+			<li><strong>プロトタイプ</strong>: <code>void TAUJ0_Init(uint32_t interval_us)</code></li>
+			<li><strong>引数</strong>:
+				<ul>
+					<li><code>interval_us</code>: 設定するインターバル周期 (マイクロ秒)</li>
+				</ul>
+			</li>
+			<li><strong>戻り値</strong>: なし</li>
+			<li><strong>前提条件</strong>: なし</li>
+			<li><strong>事後条件</strong>: ドライバ状態が <code>Stopped</code> に遷移する。</li>
+		</ul>
+
+		<h4>3.1.2 TAUJ0_Start</h4>
+		<ul>
+			<li><strong>概要</strong>: タイマカウントを開始する。</li>
+			<li><strong>プロトタイプ</strong>: <code>void TAUJ0_Start(void)</code></li>
+			<li><strong>引数</strong>: なし</li>
+			<li><strong>戻り値</strong>: なし</li>
+			<li><strong>前提条件</strong>: <code>TAUJ0_Init</code> が実行済みであること。</li>
+			<li><strong>事後条件</strong>: ドライバ状態が <code>Running</code> に遷移する。</li>
+		</ul>
+
+		<h4>3.1.3 TAUJ0_Stop</h4>
+		<ul>
+			<li><strong>概要</strong>: タイマカウントを停止する。</li>
+			<li><strong>プロトタイプ</strong>: <code>void TAUJ0_Stop(void)</code></li>
+			<li><strong>引数</strong>: なし</li>
+			<li><strong>戻り値</strong>: なし</li>
+			<li><strong>前提条件</strong>: なし</li>
+			<li><strong>事後条件</strong>: ドライバ状態が <code>Stopped</code> に遷移する。</li>
+		</ul>
+
+		<h4>3.1.4 TAUJ0_SetInterval</h4>
+		<ul>
+			<li><strong>概要</strong>: インターバル周期を変更する。</li>
+			<li><strong>プロトタイプ</strong>: <code>void TAUJ0_SetInterval(uint32_t interval_us)</code></li>
+			<li><strong>引数</strong>:
+				<ul>
+					<li><code>interval_us</code>: 新しいインターバル周期 (マイクロ秒)</li>
+				</ul>
+			</li>
+			<li><strong>戻り値</strong>: なし</li>
+			<li><strong>備考</strong>:
+				タイマ動作中に呼び出した場合、次回のカウントサイクルから反映される（または即時反映、実装依存）。本実装ではCDR0への書き込みのみ行うため、動作中の変更も可能だが、推奨は停止中の変更とする。</li>
+		</ul>
+
+		<h2>4. データ仕様</h2>
+
+		<h3>4.1 レジスタマップ</h3>
+		<table>
+			<tr>
+				<th>レジスタ名</th>
+				<th>アドレス</th>
+				<th>ビット幅</th>
+				<th>説明</th>
+			</tr>
+			<tr>
+				<td>CDR0</td>
+				<td>Base + 0x0000</td>
+				<td>32</td>
+				<td>データレジスタ (周期設定値)</td>
+			</tr>
+			<tr>
+				<td>CMOR0</td>
+				<td>Base + 0x0080</td>
+				<td>16</td>
+				<td>モードレジスタ (動作モード、クロック選択)</td>
+			</tr>
+			<tr>
+				<td>TS0</td>
+				<td>Base + 0x0014</td>
+				<td>8/16</td>
+				<td>スタートトリガ</td>
+			</tr>
+			<tr>
+				<td>TT0</td>
+				<td>Base + 0x0018</td>
+				<td>8/16</td>
+				<td>ストップトリガ</td>
+			</tr>
+			<tr>
+				<td>TO0</td>
+				<td>Base + 0x0010</td>
+				<td>8/16</td>
+				<td>出力状態</td>
+			</tr>
+			<tr>
+				<td>TOE0</td>
+				<td>Base + 0x001C</td>
+				<td>8/16</td>
+				<td>出力許可</td>
+			</tr>
+		</table>
+
+		<h2>5. 制限事項・注意事項</h2>
+		<ul>
+			<li><strong>最大周期</strong>: 32ビットカウンタと80MHzクロックにより、最大約53秒 (<code>0xFFFFFFFF / 80MHz</code>) までの周期設定が可能。</li>
+			<li><strong>最小周期</strong>: オーバーヘッドを考慮し、数マイクロ秒以上を推奨。</li>
+			<li><strong>割り込み</strong>: 割り込みハンドラの実装およびベクタテーブルへの登録は、本ドライバの範囲外（アプリケーション側で実施）とする。</li>
+		</ul>
+	</div>
+</body>
+
+</html>
